@@ -40,8 +40,9 @@ body.hasPdf #pdfPane{flex-basis:var(--split,60%)}
 @media (orientation:landscape){#divider{cursor:col-resize}#divider span{width:4px;height:44px}}
 
 /* ---------- hud ---------- */
+/* フラッシュ色に応じて文字色が暴れると目障りなので、白固定＋影で読ませる */
 #hud{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:6px;pointer-events:none;mix-blend-mode:difference;color:#fff}
+  gap:6px;pointer-events:none;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}
 #bpmBig{font-size:clamp(56px,18vmin,150px);font-weight:600;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 #meterLabel{font-size:clamp(14px,3.4vmin,22px);opacity:.75;font-variant-numeric:tabular-nums}
 #presetName{font-size:clamp(13px,3vmin,20px);opacity:.75;min-height:1.2em}

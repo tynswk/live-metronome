@@ -178,11 +178,31 @@ function toggle() { eng.running ? stop() : start(); }
 
 /* ============================ visual ============================ */
 
+/* 光り方（ストロボ）。p は 0→1 の経過割合、返り値が輝度 1→0。
+   立ち上がりは瞬時に最大輝度、頭を少し保ってから指数で落とす。 */
+function curve(p) { return p < 0.12 ? 1 : Math.exp(-6 * (p - 0.12)); }
+
 const flashPane = $('#flashPane');
 function paint(c) {
   if (eng.lastColor === c) return;
   eng.lastColor = c;
   flashPane.style.backgroundColor = c;
+}
+
+const hexCache = {};
+function rgb(hex) {
+  let v = hexCache[hex];
+  if (!v) {
+    const h = hex.replace('#', '');
+    v = hexCache[hex] = [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  return v;
+}
+function mix(bg, fg, k) {
+  const a = rgb(bg), b = rgb(fg);
+  return 'rgb(' + ((a[0] + (b[0] - a[0]) * k) | 0) + ',' +
+                  ((a[1] + (b[1] - a[1]) * k) | 0) + ',' +
+                  ((a[2] + (b[2] - a[2]) * k) | 0) + ')';
 }
 
 let dotEls = [];
@@ -215,10 +235,11 @@ function frame(ts) {
     drain(now);
     if (eng.last) {
       const dur = Math.max(0.03, beatDur() * (st.flashLen / 100));
-      const on = (now - eng.last.t) < dur;
+      const p = (now - eng.last.t) / dur;
       const acc = eng.last.beat === 0 || st.accents[eng.last.beat] === 2;
-      if (on && (!st.flashOnlyAccent || acc)) paint(acc ? st.colAccent : st.colBeat);
-      else paint(st.colBg);
+      if (p < 1 && p >= 0 && (!st.flashOnlyAccent || acc)) {
+        paint(mix(st.colBg, acc ? st.colAccent : st.colBeat, curve(p)));
+      } else paint(st.colBg);
       markDot(eng.last.beat);
     }
   }
@@ -327,7 +348,7 @@ function renderPresets() {
     const b = document.createElement('button');
     if (!p.bpm) {
       b.className = 'empty';
-      b.innerHTML = '<b>+</b><span>空き</span>';
+      b.innerHTML = '<b>+</b>';
     } else {
       b.innerHTML = '<b>' + p.bpm + '</b><span>' + (p.name || (p.beats + '/' + (p.unit === 12 ? '4.' : p.unit))) + '</span>';
       if (i === st.activePreset) b.classList.add('active');
