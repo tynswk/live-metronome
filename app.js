@@ -393,6 +393,7 @@ $('#edClear').addEventListener('click', () => {
   renderPresets(); refresh(); save(); closeEditor();
 });
 $('#edCancel').addEventListener('click', closeEditor);
+$('#editor').addEventListener('click', e => { if (e.target === $('#editor')) closeEditor(); });
 $('#edSave').addEventListener('click', () => {
   if (editIdx < 0) return;
   const on = $('#edUnitSeg button.on');
@@ -737,7 +738,16 @@ refresh();
 idbGet().then(rec => { if (rec && rec.buf) openPdf(rec.buf, rec.name); });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.update().catch(() => {});
+    // 新しい版が有効になったら一度だけ読み直す（演奏中は割り込まない）
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded || eng.running) return;
+      reloaded = true;
+      location.reload();
+    });
+  }).catch(() => {});
 }
 
 // 最初のタップで AudioContext を作っておく（iOS の自動再生制限対策）

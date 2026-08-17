@@ -1,4 +1,6 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* display を指定した要素にも hidden を効かせる（#sheet / #editor / #pdfPane） */
+[hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
 body{
   background:#0b0b0d;color:#e9e9ec;
