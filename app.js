@@ -3,7 +3,7 @@
    タイミングは Web Audio の currentTime を唯一の時計として扱う。
    setInterval / rAF はスケジューラを叩くだけで、拍の時刻決定には使わない。 */
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -523,6 +523,25 @@ $('#resetAll').addEventListener('click', () => {
   localStorage.removeItem(KEY);
   idbDel().finally(() => location.reload());
 });
+/* 配信キャッシュだけを捨てて読み直す。
+   プリセット(localStorage)と譜面(IndexedDB)には触らないので設定は残る。 */
+$('#updateApp').addEventListener('click', async e => {
+  const b = e.target;
+  b.textContent = '更新中…';
+  b.disabled = true;
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch (err) {}
+  location.replace(location.pathname + '?u=' + Date.now());
+});
+
 $('#ver').textContent = 'v' + VERSION;
 
 /* ---- divider drag ---- */
